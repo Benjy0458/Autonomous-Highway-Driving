@@ -10,15 +10,15 @@ Traffic is generated randomly, but the simulations can be made repeatable by pro
 The following files must be in the same directory to run the simulation:
 
 - test.py
-- 11_highway.jpg
+- highway.jpg
 - cfg.py
 - highway_drive.py
 - highway_states.py
 - state.py
 - Hybrid_Astar_algorithm.py
 - Astar_algorithm.py
-- npc_vehicles.py
-- agent_fsm.py
+- traffic.py
+- agent.py
 - timer.py
 
 The simulation is executed by running *test.py*.
