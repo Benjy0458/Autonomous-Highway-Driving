@@ -2,7 +2,7 @@
 
 This project simulates the driving behaviour of an autonomous car on a 3-lane highway.
 The user can choose between Normal or Hybrid A* path planners and PID or IDM for adaptive cruise control.
-Traffic is generated randomly, but the simulations can be made repeatable by providing a [seed](Customisation) in *cfg.py*.
+Traffic is generated randomly, but the simulations can be made repeatable by providing a **seed** in *cfg.py*.
 
 
 ## Running the simulation:
@@ -29,7 +29,7 @@ Running the simulation opens two windows:
 
 ##### Pygame window:
 
-This shows a [top view](Visuals) of a straight highway section.
+This shows a top view of a straight highway section.
 
 The pygame window caption displays realtime information about the current state of the simulation. From left-right these are:
 - Elapsed time: The amount of time (in seconds) that has passed since the start of the simulation
@@ -40,8 +40,8 @@ The pygame window caption displays realtime information about the current state 
 - Collisions: The number of times the agent vehicle has collided with another car.
 - Speed: The current speed of the agent vehicle in mph.
 - Current State: The current state of the Finite State Machine.
-- Algorithm: The search algorithm being used by the agent (toggle with SPACEBAR).
-- ACC: The cruise control method being used by the agent (toggle with k key).
+- Algorithm: The search algorithm being used by the agent (toggle with **SPACEBAR**).
+- ACC: The cruise control method being used by the agent (toggle with **k** key).
 
 Vehicles are displayed as rectangles with the ego vehicle coloured black, and the traffic in randomly selected colours.
 
@@ -53,7 +53,7 @@ The agent vehicle mimics a radar system to detect surrounding vehicles. Red line
 The turquoise vertical line on the left of the screen indicates the spawn area for traffic. Collisions occurring before this line are not counted.
 
 ##### Matplotlib figure window:
-Plots the [velocity and acceleration traces](Visuals) of the agent vehicle in realtime.
+Plots the velocity and acceleration traces of the agent vehicle in real time.
 
 ## Ending the simulation:
 The simulation finishes when the elapsed time reaches the total simulation time defined in cfg.py.
