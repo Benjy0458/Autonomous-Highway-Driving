@@ -67,15 +67,15 @@ NB: Re-running the simulation overwrites AgentProfile.png so user should change 
 ## Visuals:
 Pygame window: 
 
-![The pygame window](Pygame_window_example.png)
+![The pygame window](Examples/Pygame_window_example.png)
 
 Live figure:
 
-![Figure window](Live_graph_example.png)
+![Figure window](Examples/Live_graph_example.png)
 
 Agent Profile:
 
-![AgentProfile.png](AgentProfile_example_low_res.png)
+![AgentProfile](Examples/AgentProfile_example_low_res.png)
 
 
 ## Customisation:
