@@ -7,6 +7,25 @@ Traffic is generated randomly, but the simulations can be made repeatable by pro
 
 ## Running the simulation:
 
+The program has been designed to run in Python 3.7.4 and the following modules must be installed:
+- os
+- pygame
+- time
+- random
+- numpy as np
+- threading
+- multiprocessing
+- matplotlib
+- sys
+- itertools
+- scipy
+- queue
+- inspect
+- timeit
+- collections
+- heapq
+- operator
+
 The following files must be in the same directory to run the simulation:
 
 - test.py
