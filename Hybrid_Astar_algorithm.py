@@ -285,16 +285,16 @@ def plot_solution(path, obstacles):
     obs_handle = mpatches.Patch(color='black', label='Obstacles') # Manually define a new patch
 
     # Plot lanes:
-    ax.set_yticks([*cfg.lanes.values()], minor=False)
-    ax.set_yticklabels([*cfg.lanes])
+    ax.set_yticks([*cfg.lanes.values()], minor=False, fontsize=20)
+    ax.set_yticklabels([*cfg.lanes], fontsize=20)
 
-    plt.xlabel("Distance")
-    plt.ylabel("Lanes")
+    plt.xlabel("Distance", fontsize=20)
+    plt.ylabel("Lanes", fontsize=20)
 
     # Draw legend
     handles, labels = ax.get_legend_handles_labels() # Get existing legend handles
     handles.append(obs_handle) # Add the obstacles patch to the list of handles
-    plt.legend(handles=handles, loc='best', fancybox=False, shadow=True) # Plot the legend
+    plt.legend(handles=handles, loc='best', fancybox=False, shadow=True, fontsize=20) # Plot the legend
 
     ax.grid(which='both')
     ax.grid(which='minor', alpha=0.25)
@@ -320,15 +320,6 @@ def main():
 
     hy_a_star = HybridAstar(min_x=min_x, max_x=max_x, min_y=min_y, max_y=max_y, width=1530,height=120) # Initialise Hybrid A* algorithm
 
-    i=0
-    # vehicle_list = [pygame.Rect(0 + 1.2 * i, 100, 14, 6), pygame.Rect(1454, 71, 15, 6),
-    #                 pygame.Rect(200 + 1.4 * i, 72, 14, 5), pygame.Rect(250 + i, 100, 14, 5)]  # List of obstacles.
-    # vehicle_list = [pygame.Rect(120 + 1.2 * i, 89, 14, 6), pygame.Rect(1454, 71, 15, 6),
-    #                 pygame.Rect(200 + 1.4 * i, 72, 14, 5), pygame.Rect(250 + i, 100, 14, 5)]  # List of obstacles.
-    # vehicle_list = [pygame.Rect(100, 102, 14, 6),
-    #                 pygame.Rect(250, 89, 14, 5), pygame.Rect(250 + i, 102, 14, 5)]  # List of obstacles.
-    # vehicle_list = []
-
     def getRectAround(centre_point, width, height):
         """ Return a pygame.Rect of size width by height, centred around the given centre_point """
         rectangle = pygame.Rect(0, 0, width, height)  # make new rectangle
@@ -340,6 +331,7 @@ def main():
     ws = [14, 14, 14]
     hs = [6, 5, 6]
     vehicle_list = [getRectAround((rect[0], rect[1]), rect[2], rect[3]) for rect in zip(xs, ys, ws, hs)]
+    vehicle_list = [car.inflate(cfg.agent_length, cfg.agent_width) for car in vehicle_list]  # Modify obstacle size to account for Agent dimensions
 
     start = timer()
     path = hy_a_star.run((x_start, y_start, theta_start), (x_goal, y_goal, theta_goal), min_x, max_x, min_y, max_y, obstacles=vehicle_list) # Get the shortest path to the goal
