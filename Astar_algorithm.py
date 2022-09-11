@@ -27,6 +27,8 @@ inputs: Current position, Goal position, obstacle locations
 """
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+from matplotlib.collections import PatchCollection
 from scipy import interpolate as itp
 import random
 import time
@@ -36,6 +38,7 @@ import inspect
 import sys
 from threading import Thread
 from multiprocessing import Process
+from timeit import default_timer as timer
 
 from itertools import count
 
@@ -197,8 +200,8 @@ class Astar:
         self.came_from = {} # Dictionary of preceding nodes
         self.current = 0 # Stores the current node
 
-        if __name__ == "__main__":
-            image = pygame.image.load(r'11_highway.jpg')
+        if __name__ == "__main__" and self.window:
+            image = pygame.image.load(r'highway.jpg')
             image = pygame.transform.scale(image, (self.width, 118))
             self.window.blit(image, (0, 0))  # Fill window with the highway image
 
@@ -264,13 +267,13 @@ class Astar:
     def draw(self):
         """Draws the grid in the pygame window"""
         if __name__ == "__main__":
-            image = pygame.image.load(r'11_highway.jpg')
+            image = pygame.image.load(r'highway.jpg')
             image = pygame.transform.scale(image, (self.width, 118))
-            self.window.blit(image, (0, 0)) # Fill window with the highway image
+            if self.window: self.window.blit(image, (0, 0)) # Fill window with the highway image
 
-        [node.draw(self.window) for row in self.grid for node in row if node.colour not in ([node.colours["WHITE"]] if self.Draw else (node.colours["WHITE"], node.colours["RED"], node.colours["GREEN"]))] # Colour in all the nodes [node.colours["WHITE"]]: # node.colours["BLACK"], node.colours["GREY"], node.colours["GAINSBORO"], node.colours["SILVER"]
+        if self.window: [node.draw(self.window) for row in self.grid for node in row if node.colour not in ([node.colours["WHITE"]] if self.Draw else (node.colours["WHITE"], node.colours["RED"], node.colours["GREEN"]))] # Colour in all the nodes [node.colours["WHITE"]]: # node.colours["BLACK"], node.colours["GREY"], node.colours["GAINSBORO"], node.colours["SILVER"]
         __name__ == "__main__" and self.Draw and self.draw_grid()
-        pygame.display.update() and  __name__ == "__main__"
+        if self.window: pygame.display.update() and  __name__ == "__main__"
 
     def draw_grid(self):
         """Draws gridlines on grid"""
@@ -308,11 +311,12 @@ class Astar:
     def algorithm(self):
         # While the priority queue isn't empty
         while not self.open_set.empty():
-            for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE: cfg.hybrid = not cfg.hybrid  # Switch path search algorithm
-                    if event.key == pygame.K_k: cfg.IDM = not cfg.IDM # Switch controller type
-                elif event.type == pygame.QUIT and __name__ != "__main__": cfg.running = False  # Quit the program on user intervention
+            if self.window:
+                for event in pygame.event.get():
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_SPACE: cfg.hybrid = not cfg.hybrid  # Switch path search algorithm
+                        if event.key == pygame.K_k: cfg.IDM = not cfg.IDM # Switch controller type
+                    elif event.type == pygame.QUIT and __name__ != "__main__": cfg.running = False  # Quit the program on user intervention
 
             if __name__ != "__main__" and (cfg.hybrid or not cfg.running): break  # Exit the while loop if user has switched search algorithm or terminated the program.
 
@@ -388,7 +392,7 @@ class Astar:
         except TypeError: pass
         else:
             self.interp_path = tck
-            if __name__ == "__main__":
+            if __name__ == "__main__" and self.window:
                 xs, ys = itp.splev(np.linspace(0, 1, 100), tck)  # Discrete coordinates for plotting the spline
                 [pygame.draw.line(self.window, (0, 250, 250), (xs[i], ys[i]), (xs[i+1], ys[i+1])) for i in range(len(xs)-1)]
                 pygame.display.update()
@@ -465,7 +469,7 @@ def main():
     A_star = Astar(WIDTH, HEIGHT, rows, cols, WINDOW) # Initialise the Astar algorithm
     t = []
     for i in range(0, 1000, 10):
-        agent_pos, goal_pos = (0+i, 100), (250+i, 89)  # Start and end position of the algorithm.
+        agent_pos, goal_pos = (0, 102), (125, 89)  # Start and end position of the algorithm.
         # vehicle_list = [pygame.Rect(120+1.2*i, 89, 14, 6), pygame.Rect(1454, 71, 15, 6), pygame.Rect(200+1.4*i, 72, 14, 5),
         #                 pygame.Rect(250+i, 100, 14, 5)]  # List of obstacles.
         vehicle_list = []
@@ -485,5 +489,79 @@ def main():
                 pygame.quit()
                 sys.exit()
 
+def main2():
+    def plot_solution(path, obstacles):
+        """Plots the solution in a new figure window.
+        Path is an nx3 numpy array of x,y points. Obstacles is a list of pygame rect objects."""
+        x_path, y_path = path[:, 0], path[:, 1]
+
+        tck, u = itp.splprep([x_path, y_path], s=0, k=3)  # Create the interpolated spline
+        x_new, y_new = itp.splev(np.linspace(0, 1, 1000), tck)  # Discretise the spline for plotting
+
+        # Plot the path on a new figure
+        fig, ax = plt.subplots(figsize=(6, 6))
+        ax.plot(x_new, y_new, "-", color="black", label="Smoothed Path", linewidth=0.5)
+        ax.plot(x_path, y_path, "|", color="black", label="Waypoints", markersize=4, linewidth=0.1)
+        ax.plot(x_path[0], y_path[0], "o", color="k", label="Start", markersize=5, linewidth=0.2)
+        ax.plot(x_path[-1], y_path[-1], ">", color="k", label="Goal", markersize=5, linewidth=0.2)
+
+        rectangles = [plt.Rectangle((obs.left, obs.top), obs.width, obs.height) for obs in obstacles]
+        P = PatchCollection(rectangles, fc='k')
+        ax.add_collection(P)
+        obs_handle = mpatches.Patch(color='black', label='Obstacles')  # Manually define a new patch
+
+        # Plot lanes:
+        ax.set_yticks([*cfg.lanes.values()], minor=False, fontsize=20)
+        ax.set_yticklabels([*cfg.lanes], fontsize=20)
+
+        plt.xlabel("Distance", fontsize=20)
+        plt.ylabel("Lanes", fontsize=20)
+
+        # Draw legend
+        handles, labels = ax.get_legend_handles_labels()  # Get existing legend handles
+        handles.append(obs_handle)  # Add the obstacles patch to the list of handles
+        plt.legend(handles=handles, loc='best', fancybox=False, shadow=True, fontsize=20)  # Plot the legend
+
+        ax.grid(which='both')
+        ax.grid(which='minor', alpha=0.25)
+        ax.grid(which='major', alpha=0.5)
+
+        plt.xlim([0, 270])
+        plt.ylim([0, 120])
+
+        ax.invert_yaxis()
+
+        plt.show()
+
+    def getRectAround(centre_point, width, height):
+        """ Return a pygame.Rect of size width by height, centred around the given centre_point """
+        rectangle = pygame.Rect(0, 0, width, height)  # make new rectangle
+        rectangle.center = centre_point  # centre rectangle
+        return rectangle
+
+    xs = [100, 250, 250]
+    ys = [102, 89, 102]
+    ws = [14, 14, 14]
+    hs = [6, 5, 6]
+    vehicle_list = [getRectAround((rect[0], rect[1]), rect[2], rect[3]) for rect in zip(xs, ys, ws, hs)]
+    vehicle_list = [car.inflate(cfg.agent_length, cfg.agent_width) for car in vehicle_list]  # Modify obstacle size to account for Agent dimensions
+
+    WIDTH, HEIGHT = 1530, 120  # Width, height of Pygame window
+    rows, cols = 60, 170  # rows, cols should be factors of HEIGHT, WIDTH respectively. Sets the grid density, Number of rows/columns in grid
+
+    # WINDOW = init_pygame(WIDTH, HEIGHT)  # Create the pygame window
+    A_star = Astar(WIDTH, HEIGHT, rows, cols)  # Initialise the Astar algorithm
+
+    agent_pos, goal_pos = (0, 102), (125, 89)  # Start and end position of the algorithm.
+    start = timer()
+    path = A_star.run(agent_pos, goal_pos, vehicle_list) # Run the algorithm
+    print(timer() - start)
+
+    sol_path = np.vstack((path[1][0],path[1][1])).T
+
+    plot_solution(sol_path, vehicle_list)
+
+
+
 if __name__ == "__main__":
-    main()
+    main2()
