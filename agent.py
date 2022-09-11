@@ -62,7 +62,6 @@ class AgentCar:
         self.direction = 1 # 1 is right, -1 left
         self.color = (0, 0, 0) # Agent color
         self.track = track
-        self.velocity_x = cfg.lane_velocities[self.track]
         self.reset() # initial states
         self.rect = pygame.Rect(self.x - int(width / 2), self.y - int(height / 2), self.length, self.width) # rectangle for the car
         self.car_front1 = self.car_front2 = self.track_length if self.direction == 1 else 0
@@ -81,8 +80,7 @@ class AgentCar:
         """Reset the agent."""
         self.x = 0 if self.direction == 1 else cfg.window_width # get the initial x value
         self.y = cfg.lanes[self.track] # get the initial y value
-        self.velocity_x, self.velocity_y = self.velocity_x, 0
-        self.counter = 0 # the counter used for the track change animations
+        self.velocity_x, self.velocity_y = cfg.lane_velocities[self.track], 0
         self.color = (0, 0, 0)
         self.n_track_changes = 0
         self.goal_pos = (self.x + 40, self.y)
@@ -103,14 +101,14 @@ class AgentCar:
         distances_rel, velocities_rel, closest_cars = self.radar(car_list, velocities, surface)
 
         acc = self.follow_car(distances_rel[0], velocities_rel[0], dt) # Calculate the required acc. of the agent.
-        self.velocity_x += acc * 2.237 #1.609 # Update the agent velocity. Convert acc. to mph/s
+        self.velocity_x += acc * 2.237 # Update the agent velocity. Convert acc. to mph/s
         if self.max_speed <= self.velocity_x: self.velocity_x, acc = self.max_speed, 0 # Ensure agent velocity is within acceptable range
         elif self.min_speed >= self.velocity_x: self.velocity_x, acc = self.min_speed, 0
 
         self.finite_state_machine(distances_rel, velocities_rel) # Update FSM and decide whether to perform a lane change
 
         # A* path search------------------
-        obstacles = [car.inflate(self.length /2, self.width/2) for car in closest_cars] # Modify obstacle size to account for Agent dimensions
+        obstacles = [car.inflate(self.length, self.width) for car in closest_cars] # Modify obstacle size to account for Agent dimensions
 
         # Bounds the search area for hybrid A* between the current and goal pos.
         min_x, max_x = self.x, self.goal_pos[0] +1
@@ -159,7 +157,8 @@ class AgentCar:
 
     def observe_surrounding_vehicles(self, distances_rel, velocities_rel):
         """Returns 1 of 4 states depending on the distance to surrounding vehicles."""
-        if self.counter == 0:  # Don't update the state of the FSM if a lane change maneuver is still taking place.
+        # if self.counter == 0:  # Don't update the state of the FSM if a lane change maneuver is still taking place.
+        if abs(self.y - self.goal_pos[1]) < 2:
             if (distances_rel[0] < 100) and (velocities_rel[0] < self.max_speed - 10):
                 observation = 'slow_vehicle'
             elif distances_rel[0] < 100:
@@ -217,7 +216,8 @@ class AgentCar:
 
     def change_track(self, track):
         """Change the track of the agent car."""
-        if not self.counter:
+        # if not self.counter:
+        if self.y != self.goal_pos[1]:
             if track == "l":    # change to left track
                 if self.track > 3:
                     self.track -= 1 * self.direction
